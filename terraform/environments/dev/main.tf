@@ -1,3 +1,17 @@
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 5.0"
+    }
+  }
+}
+
+provider "aws" {
+  region = var.aws_region
+}
+
+# 1. Core Isolation Network Module
 module "network" {
   source               = "../../modules/network"
   vpc_cidr             = "10.0.0.0/16"
@@ -6,14 +20,16 @@ module "network" {
   availability_zones   = ["${var.aws_region}a", "${var.aws_region}b"]
 }
 
+# 2. Firewall and IAM Security Group Mapping Tier
 module "security" {
   source = "../../modules/security"
   vpc_id = module.network.vpc_id
 }
 
+# 3. Protected Backend RDS Postgres Storage Group
 module "database" {
   source             = "../../modules/database"
-  private_subnet_ids = module.network.private_subnet_ids
+  private_subnet_ids = module.network.private_subnet_ids # Correctly reads from network outputs
   db_sg_id           = module.security.db_sg_id
   
   db_name            = "fintech_core"
@@ -21,13 +37,15 @@ module "database" {
   password           = var.db_password
 }
 
+# 4. Compute Ingress Routing and Elastic Load Balancer 
 module "compute" {
   source            = "../../modules/compute"
   vpc_id            = module.network.vpc_id
-  public_subnet_ids = module.network.public_subnet_ids
+  public_subnet_ids = module.network.public_subnet_ids # Correctly reads from network outputs
   alb_sg_id         = module.security.alb_sg_id
 }
 
+# 5. ECS Fargate Container Deployment Engine
 module "app" {
   source                 = "../../modules/app"
   cluster_name           = module.compute.cluster_name
@@ -45,7 +63,9 @@ module "app" {
   db_user                = "db_admin"
   db_password            = var.db_password
 }
+
+# 6. Static S3 React Front-End Web UI
 module "frontend" {
   source      = "../../modules/frontend"
-  bucket_name = "fintech-platform-ui-dev-${var.docker_username}" # Dynamic naming to prevent collisions
+  bucket_name = "fintech-platform-ui-dev-${var.docker_username}"
 }
