@@ -1,10 +1,10 @@
+# 1. ALB Security Group (Public Internet Gateway Traffic)
 resource "aws_security_group" "alb" {
   name        = "fintech-alb-sg-dev"
-  description = "Explicit internet ingress firewall perimeter"
+  description = "Allow inbound public HTTP web traffic to load balancer"
   vpc_id      = var.vpc_id
 
   ingress {
-    description = "Allow public HTTP traffic"
     from_port   = 80
     to_port     = 80
     protocol    = "tcp"
@@ -18,79 +18,73 @@ resource "aws_security_group" "alb" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  tags = {
-    Name = "fintech-alb-sg-dev"
-  }
+  tags = { Name = "fintech-alb-sg-dev" }
 }
+
+# 2. ECS Tasks Security Group (Internal Compute Routing Layer)
 resource "aws_security_group" "ecs" {
   name        = "fintech-ecs-sg-dev"
-  description = "App tier firewall isolating microservices"
+  description = "Isolate containers to only accept incoming traffic from ALB"
   vpc_id      = var.vpc_id
 
   ingress {
-    description = "Isolate ingress exclusively to traffic originating from the ALB"
-    from_port   = 8080
-    to_port     = 8080
-    protocol    = "tcp"
+    from_port       = 8080
+    to_port         = 8080
+    protocol        = "tcp"
     security_groups = [aws_security_group.alb.id]
   }
 
   egress {
-    description = "Allow containers to pull images and write logs out"
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  tags = {
-    Name = "fintech-ecs-sg-dev"
-  }
+  tags = { Name = "fintech-ecs-sg-dev" }
 }
-resource "aws_security_group" "DB" {
+
+# 3. Database Security Group (Protected Backend Persistence Tier)
+resource "aws_security_group" "db" {
   name        = "fintech-db-sg-dev"
-  description = "Strict data tier firewall perimeter"
+  description = "Enforce database engine access strictly from the ECS compute group"
   vpc_id      = var.vpc_id
 
   ingress {
-    description = "Isolate database ingress exclusively to the app container tier"
-    from_port   = 5432
-    to_port     = 5432
-    protocol    = "tcp"
+    from_port       = 5432
+    to_port         = 5432
+    protocol        = "tcp"
     security_groups = [aws_security_group.ecs.id]
   }
 
   egress {
-    description = "Prevent database from establishing outbound web connections"
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  tags = {
-    Name = "fintech-db-sg-dev"
-  }
+  tags = { Name = "fintech-db-sg-dev" }
 }
-resource "aws_iam_role" "ecs-execution-role" {
-  name = "test_role"
+
+# 4. ECS Task Execution IAM Role (Fixes the Copilot / Resource Missing Block)
+resource "aws_iam_role" "ecs_execution_role" {
+  name = "fintech-ecs-execution-role-dev"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
-    Statement = [
-      {
-        Action = "sts:AssumeRole"
-        Effect = "Allow"
-        Sid    = ""
-        Principal = {
-          Service = "ecs-tasks.amazonaws.com"
-        }
-      },
-    ]
+    Statement = [{
+      Action    = "sts:AssumeRole"
+      Effect    = "Allow"
+      Principal = { Service = "ecs-tasks.amazonaws.com" }
+    }]
   })
+
+  tags = { Name = "fintech-ecs-execution-role-dev" }
 }
-resource "aws_iam_policy_attachment" "ecs-policy-attachment" {
-  name       = "test-attachment"
-  roles      = [aws_iam_role.ecs-execution-role.name]
+
+# Attaches the AWS-managed core policy required for containers to boot, pipe logs, and pull images
+resource "aws_iam_role_policy_attachment" "ecs_execution" {
+  role       = aws_iam_role.ecs_execution_role.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
 }
