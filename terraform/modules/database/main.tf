@@ -15,8 +15,8 @@ resource "aws_db_instance" "postgres" {
   instance_class         = "db.t3.micro" # Fits cleanly into AWS Free Tier options
   
   db_name                = var.db_name
-  username               = var.db_user
-  password               = var.db_password
+  username               = var.username
+  password               = var.password
   
   db_subnet_group_name   = aws_db_subnet_group.main.name
   vpc_security_group_ids = [var.db_sg_id]

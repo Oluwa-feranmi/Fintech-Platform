@@ -1,24 +1,25 @@
+variable "db_name" {
+  description = "Database name"
+  type        = string
+}
+
+variable "username" {
+  description = "Database master username"
+  type        = string
+}
+
+variable "password" {
+  description = "Database master password"
+  type        = string
+  sensitive   = true
+}
+
 variable "private_subnet_ids" {
+  description = "Private subnet IDs for RDS"
   type        = list(string)
-  description = "Isolated private subnet IDs assigned for database placement"
 }
 
 variable "db_sg_id" {
+  description = "Security group ID for database"
   type        = string
-  description = "The target firewall security group ID sealing database access"
-}
-
-variable "db_name" {
-  type    = string
-  default = "fintech_core"
-}
-
-variable "db_user" {
-  type    = string
-  default = "db_admin"
-}
-
-variable "db_password" {
-  type      = string
-  sensitive = true
 }
