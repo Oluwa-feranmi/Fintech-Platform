@@ -1,37 +1,33 @@
-# Group isolated private subnets across multiple AZs into a logical network cluster target
+# 1. Dedicated Subnet Grouping across multiple Availability Zones
 resource "aws_db_subnet_group" "main" {
-  name        = "fintech-db-subnet-group-dev"
-  subnet_ids  = var.private_subnet_ids
-  description = "Enforces backend persistence subnets isolation"
+  name       = "fintech-db-subnet-group-dev"
+  subnet_ids = var.private_subnet_ids
 
-  tags = {
-    Name = "fintech-db-subnet-group-dev"
-  }
+  tags = { Name = "fintech-db-subnet-group-dev" }
 }
 
-# The primary database instance (Free Tier Engine Stack with Amazon Q Security Enhancements)
+# 2. Main Relational Database Engine
 resource "aws_db_instance" "postgres" {
-  identifier             = "fintech-core-db-dev"
+  allocated_storage      = 20
+  max_allocated_storage  = 50
   engine                 = "postgres"
-  engine_version         = "15.4"
-  instance_class         = "db.t3.micro" # Fully covered under AWS Free Tier
-  allocated_storage      = 20            # 20GB GP2 storage allocation
-  storage_type           = "gp2"
+  engine_version         = "16.3" # Enforcing a globally available, stable engine release
+  instance_class         = "db.t3.micro" # Fits cleanly into AWS Free Tier options
   
   db_name                = var.db_name
-  username               = var.username
-  password               = var.password
+  username               = var.db_user
+  password               = var.db_password
+  
   db_subnet_group_name   = aws_db_subnet_group.main.name
   vpc_security_group_ids = [var.db_sg_id]
+  
+  publicly_accessible    = false
+  
+  # CRITICAL FOR TEARDOWN: Prevents AWS from hanging onto an un-deletable storage backup when destroying
+  skip_final_snapshot    = true 
 
-  # --- SECURITY PATCHES ---
-  storage_encrypted                   = true  # Encrypts data at rest using default AWS KMS keys
-  iam_database_authentication_enabled = true  # Enables secure IAM token-based login options
+  # Explicit lifecycle block to ensure the network boundary initializes first
+  depends_on = [aws_db_subnet_group.main]
 
-  skip_final_snapshot    = true          # Prevents termination hang/billing charges
-  publicly_accessible    = false         # Explicit block from external routing table logic
-
-  tags = {
-    Name = "fintech-core-db-dev"
-  }
+  tags = { Name = "fintech-postgres-dev" }
 }
