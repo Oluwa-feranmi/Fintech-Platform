@@ -1,0 +1,17 @@
+variable "cluster_name" { type = string }
+variable "public_subnet_ids" { type = list(string) }
+variable "ecs_sg_id" { type = string }
+variable "ecs_execution_role_arn" { type = string }
+variable "db_host" { type = string }
+variable "db_name" { type = string }
+variable "db_user" { type = string }
+variable "db_password" { type = string }
+
+variable "tg_transaction_arn" { type = string }
+variable "tg_fraud_arn"       { type = string }
+variable "tg_wallet_arn"      { type = string }
+
+variable "docker_username" {
+  type        = string
+  description = "Your DockerHub profile handle to locate service images"
+}
