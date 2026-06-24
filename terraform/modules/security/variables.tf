@@ -1,4 +1,4 @@
 variable "vpc_id" {
   type        = string
-  description = "The target VPC ID where security groups will be instantiated"
+  description = "The ID of the target VPC where security elements will align"
 }
