@@ -3,7 +3,7 @@ name: Production Multi-Tier Cloud Platform Deployment
 on:
   push:
     branches:
-      - main # Triggers automation every time you push to your primary branch
+      - main
 
 jobs:
   deploy:
@@ -11,11 +11,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Clone down your code repository
       - name: Checkout Code Codebase
         uses: actions/checkout@v4
 
-      # Step 2: Set up cloud authentication variables
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -23,36 +21,37 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
 
-      # Step 3: Log directly into DockerHub to authorize image shipping
       - name: Log in to DockerHub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      # Step 4: Setup modern Node.js runtime environment without restrictive lockfile caching
       - name: Setup Node.js Environment
         uses: actions/setup-node@v4
         with:
           node-version: 22
 
-      # Step 5: Setup Terraform CLI binaries on runner agent
       - name: Setup Terraform Core
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: 1.5.0
 
-      # Step 6: Initialize and Apply Terraform Blueprints
+      # NEW SAFETY EXTRACTION: Validates architecture logic compilation upfront
+      - name: Terraform Guardrail Validations
+        run: |
+          cd terraform/environments/dev
+          terraform init
+          terraform validate
+
       - name: Terraform Deploy Infrastructure
         id: terraform
         run: |
           cd terraform/environments/dev
-          terraform init
           terraform apply -auto-approve \
             -var="db_password=${{ secrets.DB_PASSWORD }}" \
             -var="docker_username=${{ secrets.DOCKERHUB_USERNAME }}"
 
-      # Step 7: Parse the newly generated AWS ALB endpoint out of Terraform Outputs
       - name: Extract Deployment Target URLs
         id: outputs
         run: |
@@ -60,34 +59,28 @@ jobs:
           echo "ALB_URL=$(terraform output -raw backend_api_gateway_url)" >> $GITHUB_OUTPUT
           echo "S3_BUCKET=$(terraform output -raw live_web_ui_url | sed 's/http:\/\///' | cut -d'.' -f1)" >> $GITHUB_OUTPUT
 
-      # Step 8: Build and Push Docker Containers for Backends
       - name: Build & Publish Microservices
         run: |
-          # Build & Push Transaction Service
           cd services/transaction-service
           docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/transaction-service:v1 .
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/transaction-service:v1
           
-          # Build & Push Fraud Service
           cd ../fraud-service
           docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/fraud-service:v1 .
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/fraud-service:v1
           
-          # Build & Push Wallet Service
           cd ../wallet-service
           docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/wallet-service:v1 .
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/wallet-service:v1
 
-      # Step 9: Compile and Build React Frontend Static Production Bundle
       - name: Compile Web Dashboard UI
         env:
-          REACT_APP_API_URL: ${{ steps.outputs.outputs.ALB_URL }} # Binds frontend directly to your live AWS ALB URL
+          REACT_APP_API_URL: ${{ steps.outputs.outputs.ALB_URL }}
         run: |
           cd frontend/react-app
           npm install
           npm run build
 
-      # Step 10: Sync compiled production UI assets directly onto the S3 Hosting bucket
       - name: Sync UI Assets to AWS S3 Static Bucket
         run: |
           aws s3 sync frontend/react-app/build/ s3://${{ steps.outputs.outputs.S3_BUCKET }} --delete

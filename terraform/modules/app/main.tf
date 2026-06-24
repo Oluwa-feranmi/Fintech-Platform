@@ -1,6 +1,6 @@
-# ==============================================================================
-# 1. TRANSACTION SERVICE
-# ==============================================================================
+# ==========================================
+# 1. TRANSACTION MICROSERVICE
+# ==========================================
 resource "aws_ecs_task_definition" "transaction" {
   family                   = "transaction-task-dev"
   network_mode             = "awsvpc"
@@ -10,7 +10,7 @@ resource "aws_ecs_task_definition" "transaction" {
   execution_role_arn       = var.ecs_execution_role_arn
 
   container_definitions = jsonencode([{
-    name      = "transaction-api"
+    name      = "transaction"
     image     = "${var.docker_username}/transaction-service:v1"
     essential = true
     portMappings = [{ containerPort = 8080, hostPort = 8080 }]
@@ -35,16 +35,17 @@ resource "aws_ecs_service" "transaction" {
     security_groups  = [var.ecs_sg_id]
     assign_public_ip = true
   }
+
   load_balancer {
     target_group_arn = var.tg_transaction_arn
-    container_name   = "transaction-api"
+    container_name   = "transaction"
     container_port   = 8080
   }
 }
 
-# ==============================================================================
-# 2. FRAUD SERVICE
-# ==============================================================================
+# ==========================================
+# 2. FRAUD MICROSERVICE
+# ==========================================
 resource "aws_ecs_task_definition" "fraud" {
   family                   = "fraud-task-dev"
   network_mode             = "awsvpc"
@@ -54,7 +55,7 @@ resource "aws_ecs_task_definition" "fraud" {
   execution_role_arn       = var.ecs_execution_role_arn
 
   container_definitions = jsonencode([{
-    name      = "fraud-api"
+    name      = "fraud"
     image     = "${var.docker_username}/fraud-service:v1"
     essential = true
     portMappings = [{ containerPort = 8080, hostPort = 8080 }]
@@ -79,16 +80,17 @@ resource "aws_ecs_service" "fraud" {
     security_groups  = [var.ecs_sg_id]
     assign_public_ip = true
   }
+
   load_balancer {
     target_group_arn = var.tg_fraud_arn
-    container_name   = "fraud-api"
+    container_name   = "fraud"
     container_port   = 8080
   }
 }
 
-# ==============================================================================
-# 3. WALLET SERVICE
-# ==============================================================================
+# ==========================================
+# 3. WALLET MICROSERVICE
+# ==========================================
 resource "aws_ecs_task_definition" "wallet" {
   family                   = "wallet-task-dev"
   network_mode             = "awsvpc"
@@ -98,7 +100,7 @@ resource "aws_ecs_task_definition" "wallet" {
   execution_role_arn       = var.ecs_execution_role_arn
 
   container_definitions = jsonencode([{
-    name      = "wallet-api"
+    name      = "wallet"
     image     = "${var.docker_username}/wallet-service:v1"
     essential = true
     portMappings = [{ containerPort = 8080, hostPort = 8080 }]
@@ -123,9 +125,10 @@ resource "aws_ecs_service" "wallet" {
     security_groups  = [var.ecs_sg_id]
     assign_public_ip = true
   }
+
   load_balancer {
     target_group_arn = var.tg_wallet_arn
-    container_name   = "wallet-api"
+    container_name   = "wallet"
     container_port   = 8080
   }
 }
