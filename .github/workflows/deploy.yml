@@ -30,13 +30,11 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      # Step 4: Setup Node.js runtime environment to compile the Frontend UI
+      # Step 4: Setup modern Node.js runtime environment without restrictive lockfile caching
       - name: Setup Node.js Environment
         uses: actions/setup-node@v4
         with:
-          node-version: 20
-          cache: 'npm'
-          cache-dependency-path: frontend/react-app/package.json
+          node-version: 22
 
       # Step 5: Setup Terraform CLI binaries on runner agent
       - name: Setup Terraform Core
@@ -83,7 +81,7 @@ jobs:
       # Step 9: Compile and Build React Frontend Static Production Bundle
       - name: Compile Web Dashboard UI
         env:
-          REACT_APP_API_URL: ${{ steps.outputs.outputs.ALB_URL }} # Binds the frontend to your live AWS ALB URL!
+          REACT_APP_API_URL: ${{ steps.outputs.outputs.ALB_URL }} # Binds frontend directly to your live AWS ALB URL
         run: |
           cd frontend/react-app
           npm install
