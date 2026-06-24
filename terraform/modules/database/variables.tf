@@ -1,21 +1,24 @@
 variable "private_subnet_ids" {
-    type = list(string)
-    description = "Target isolated subnets for the database cluster network placement"
+  type        = list(string)
+  description = "Isolated private subnet IDs assigned for database placement"
 }
+
 variable "db_sg_id" {
-  type = string
-  description = "The security group firewall ID to isolate data tier ingress"
+  type        = string
+  description = "The target firewall security group ID sealing database access"
 }
+
 variable "db_name" {
-  type = string
-  description = "The physical database instance logical blueprint identifier"
+  type    = string
+  default = "fintech_core"
 }
-variable "username" {
-  type = string
-  description = "Administrative primary master account username"
+
+variable "db_user" {
+  type    = string
+  default = "db_admin"
 }
-variable "password" {
-  type = string
-  description = "Primary account access credential passkey string"
+
+variable "db_password" {
+  type      = string
   sensitive = true
 }
