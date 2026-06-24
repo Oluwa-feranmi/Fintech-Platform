@@ -1,6 +1,6 @@
 variable "aws_region" {
   type    = string
-  default = "us-east-1"
+  default = "eu-west-1"
 }
 
 variable "db_password" {
@@ -10,5 +10,5 @@ variable "db_password" {
 
 variable "docker_username" {
   type        = string
-  description = "Your unique DockerHub handle matching your pushed image names"
+  description = "DockerHub account username used to build image pathways"
 }
