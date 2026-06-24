@@ -1,0 +1,33 @@
+name: Secure Infrastructure Teardown
+
+on:
+  workflow_dispatch: # Enables a manual activation button inside the GitHub Actions UI
+
+jobs: 
+  destroy:
+    name: Purge Cloud Resources
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code Codebase
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Setup Terraform Core
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.5.0
+
+      - name: Terraform Purge Execution
+        run: |
+          cd terraform/environments/dev
+          terraform init
+          terraform destroy -auto-approve \
+            -var="db_password=${{ secrets.DB_PASSWORD }}" \
+            -var="docker_username=${{ secrets.DOCKERHUB_USERNAME }}"
