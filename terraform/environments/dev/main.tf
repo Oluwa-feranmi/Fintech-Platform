@@ -22,8 +22,9 @@ module "network" {
 
 # 2. Firewall and IAM Security Group Mapping Tier
 module "security" {
-  source = "../../modules/security"
-  vpc_id = module.network.vpc_id
+  source      = "../../modules/security"
+  environment = "dev"
+  vpc_id      = module.network.vpc_id
 }
 
 # 3. Protected Backend RDS Postgres Storage Group

@@ -1,6 +1,6 @@
 # 1. ALB Security Group (Public Internet Gateway Traffic)
 resource "aws_security_group" "alb" {
-  name        = "fintech-alb-sg-dev"
+  name        = "fintech-alb-sg-${var.environment}"
   description = "Allow inbound public HTTP web traffic to load balancer"
   vpc_id      = var.vpc_id
 
@@ -18,12 +18,12 @@ resource "aws_security_group" "alb" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  tags = { Name = "fintech-alb-sg-dev" }
+  tags = { Name = "fintech-alb-sg-${var.environment}" }
 }
 
 # 2. ECS Tasks Security Group (Internal Compute Routing Layer)
 resource "aws_security_group" "ecs" {
-  name        = "fintech-ecs-sg-dev"
+  name        = "fintech-ecs-sg-${var.environment}"
   description = "Isolate containers to only accept incoming traffic from ALB"
   vpc_id      = var.vpc_id
 
@@ -41,12 +41,12 @@ resource "aws_security_group" "ecs" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  tags = { Name = "fintech-ecs-sg-dev" }
+  tags = { Name = "fintech-ecs-sg-${var.environment}" }
 }
 
 # 3. Database Security Group (Protected Backend Persistence Tier)
 resource "aws_security_group" "db" {
-  name        = "fintech-db-sg-dev"
+  name        = "fintech-db-sg-${var.environment}"
   description = "Enforce database engine access strictly from the ECS compute group"
   vpc_id      = var.vpc_id
 
@@ -64,12 +64,12 @@ resource "aws_security_group" "db" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  tags = { Name = "fintech-db-sg-dev" }
+  tags = { Name = "fintech-db-sg-${var.environment}" }
 }
 
 # 4. ECS Task Execution IAM Role (Fixes the Copilot / Resource Missing Block)
 resource "aws_iam_role" "ecs_execution_role" {
-  name = "fintech-ecs-execution-role-dev"
+  name = "fintech-ecs-execution-role-${var.environment}"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -80,7 +80,7 @@ resource "aws_iam_role" "ecs_execution_role" {
     }]
   })
 
-  tags = { Name = "fintech-ecs-execution-role-dev" }
+  tags = { Name = "fintech-ecs-execution-role-${var.environment}" }
 }
 
 # Attaches the AWS-managed core policy required for containers to boot, pipe logs, and pull images
