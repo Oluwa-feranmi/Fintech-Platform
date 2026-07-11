@@ -44,6 +44,13 @@ jobs:
           terraform init
           terraform validate
 
+      - name: Import Existing AWS Resources
+        run: |
+          cd terraform/environments/dev
+          terraform import -var="db_password=${{ secrets.DB_PASSWORD }}" -var="docker_username=${{ secrets.DOCKERHUB_USERNAME }}" 'module.database.aws_db_subnet_group.main' fintech-db-subnet-group-dev || true
+          terraform import -var="db_password=${{ secrets.DB_PASSWORD }}" -var="docker_username=${{ secrets.DOCKERHUB_USERNAME }}" 'module.security.aws_iam_role.ecs_execution_role' fintech-ecs-execution-role-dev || true
+          terraform import -var="db_password=${{ secrets.DB_PASSWORD }}" -var="docker_username=${{ secrets.DOCKERHUB_USERNAME }}" 'module.frontend.aws_s3_bucket.frontend' fintech-platform-ui-dev-${{ secrets.DOCKERHUB_USERNAME }} || true
+
       - name: Terraform Deploy Infrastructure
         id: terraform
         run: |
