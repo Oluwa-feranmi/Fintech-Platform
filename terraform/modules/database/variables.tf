@@ -1,3 +1,8 @@
+variable "environment" {
+  type        = string
+  description = "Deployment environment name (e.g. dev, staging, prod)"
+}
+
 variable "private_subnet_ids" {
   type        = list(string)
   description = "Isolated private subnet IDs assigned for database placement"

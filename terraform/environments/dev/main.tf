@@ -29,12 +29,13 @@ module "security" {
 # 3. Protected Backend RDS Postgres Storage Group
 module "database" {
   source             = "../../modules/database"
+  environment        = "dev"
   private_subnet_ids = module.network.private_subnet_ids
   db_sg_id           = module.security.db_sg_id
   
   db_name            = "fintech_core"
-  username           = "db_admin"       # Changed from db_user to username
-  password           = var.db_password  # Changed from db_password to password
+  username           = "db_admin"
+  password           = var.db_password
 }
 
 # 4. Compute Ingress Routing and Elastic Load Balancer 

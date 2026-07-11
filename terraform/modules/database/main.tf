@@ -1,8 +1,8 @@
 resource "aws_db_subnet_group" "main" {
-  name       = "fintech-db-subnet-group-dev"
+  name       = "fintech-db-subnet-group-${var.environment}"
   subnet_ids = var.private_subnet_ids
 
-  tags = { Name = "fintech-db-subnet-group-dev" }
+  tags = { Name = "fintech-db-subnet-group-${var.environment}" }
 }
 
 resource "aws_db_instance" "postgres" {
@@ -23,5 +23,5 @@ resource "aws_db_instance" "postgres" {
 
   depends_on = [aws_db_subnet_group.main]
 
-  tags = { Name = "fintech-postgres-dev" }
+  tags = { Name = "fintech-postgres-${var.environment}" }
 }
