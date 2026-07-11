@@ -1,15 +1,15 @@
 resource "aws_db_subnet_group" "main" {
   name       = "fintech-db-subnet-group-dev"
   subnet_ids = var.private_subnet_ids
-  tags       = { Name = "fintech-db-subnet-group-dev" }
+
+  tags = { Name = "fintech-db-subnet-group-dev" }
 }
 
 resource "aws_db_instance" "postgres" {
   allocated_storage      = 20
-  max_allocated_storage  = 50
   engine                 = "postgres"
-  engine_version         = "16.3"
-  instance_class         = "db.t3.micro"
+  engine_version         = "16.3" 
+  instance_class         = "db.t3.micro" 
   
   db_name                = var.db_name
   username               = var.username
@@ -22,5 +22,6 @@ resource "aws_db_instance" "postgres" {
   skip_final_snapshot    = true 
 
   depends_on = [aws_db_subnet_group.main]
-  tags       = { Name = "fintech-postgres-dev" }
+
+  tags = { Name = "fintech-postgres-dev" }
 }
