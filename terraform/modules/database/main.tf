@@ -8,8 +8,9 @@ resource "aws_db_subnet_group" "main" {
 resource "aws_db_instance" "postgres" {
   allocated_storage      = 20
   engine                 = "postgres"
-  engine_version         = "16.3" 
-  instance_class         = "db.t3.micro" 
+  engine_version         = "16"
+  instance_class         = "db.t3.micro"
+  multi_az               = false
   
   db_name                = var.db_name
   username               = var.username

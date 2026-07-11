@@ -44,16 +44,6 @@ jobs:
           terraform init
           terraform validate
 
-      - name: Import Existing AWS Resources
-        run: |
-          cd terraform/environments/dev
-          terraform import -var="db_password=${{ secrets.DB_PASSWORD }}" -var="docker_username=${{ secrets.DOCKERHUB_USERNAME }}" 'module.security.aws_iam_role.ecs_execution_role' fintech-ecs-execution-role-dev || true
-          terraform import -var="db_password=${{ secrets.DB_PASSWORD }}" -var="docker_username=${{ secrets.DOCKERHUB_USERNAME }}" 'module.frontend.aws_s3_bucket.frontend' fintech-platform-ui-dev-${{ secrets.DOCKERHUB_USERNAME }} || true
-          terraform import -var="db_password=${{ secrets.DB_PASSWORD }}" -var="docker_username=${{ secrets.DOCKERHUB_USERNAME }}" 'module.compute.aws_lb.main' arn:aws:elasticloadbalancing:eu-west-1:224039895487:loadbalancer/app/fintech-alb-dev/617f7a4d7362613d || true
-          terraform import -var="db_password=${{ secrets.DB_PASSWORD }}" -var="docker_username=${{ secrets.DOCKERHUB_USERNAME }}" 'module.compute.aws_lb_target_group.transaction' arn:aws:elasticloadbalancing:eu-west-1:224039895487:targetgroup/tg-transaction-dev/ebf22919282aa0c5 || true
-          terraform import -var="db_password=${{ secrets.DB_PASSWORD }}" -var="docker_username=${{ secrets.DOCKERHUB_USERNAME }}" 'module.compute.aws_lb_target_group.fraud' arn:aws:elasticloadbalancing:eu-west-1:224039895487:targetgroup/tg-fraud-dev/981da6df45f7d17c || true
-          terraform import -var="db_password=${{ secrets.DB_PASSWORD }}" -var="docker_username=${{ secrets.DOCKERHUB_USERNAME }}" 'module.compute.aws_lb_target_group.wallet' arn:aws:elasticloadbalancing:eu-west-1:224039895487:targetgroup/tg-wallet-dev/c1d51b5e68b9b480 || true
-
       - name: Terraform Deploy Infrastructure
         id: terraform
         run: |
