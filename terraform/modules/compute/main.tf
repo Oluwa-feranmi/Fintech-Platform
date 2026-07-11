@@ -1,9 +1,9 @@
 resource "aws_ecs_cluster" "main" {
-  name = "fintech-cluster-dev"
+  name = "fintech-cluster-${var.environment}"
 }
 
 resource "aws_lb" "main" {
-  name               = "fintech-alb-dev"
+  name               = "fintech-alb-${var.environment}"
   internal           = false
   load_balancer_type = "application"
   security_groups    = [var.alb_sg_id]
@@ -17,7 +17,7 @@ resource "aws_lb" "main" {
 
 # --- THREE TARGET GROUPS ---
 resource "aws_lb_target_group" "transaction" {
-  name        = "tg-transaction-dev"
+  name        = "tg-transaction-${var.environment}"
   port        = 8080
   protocol    = "HTTP"
   vpc_id      = var.vpc_id
@@ -28,7 +28,7 @@ resource "aws_lb_target_group" "transaction" {
 }
 
 resource "aws_lb_target_group" "fraud" {
-  name        = "tg-fraud-dev"
+  name        = "tg-fraud-${var.environment}"
   port        = 8080
   protocol    = "HTTP"
   vpc_id      = var.vpc_id
@@ -39,7 +39,7 @@ resource "aws_lb_target_group" "fraud" {
 }
 
 resource "aws_lb_target_group" "wallet" {
-  name        = "tg-wallet-dev"
+  name        = "tg-wallet-${var.environment}"
   port        = 8080
   protocol    = "HTTP"
   vpc_id      = var.vpc_id

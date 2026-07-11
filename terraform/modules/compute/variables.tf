@@ -1,3 +1,8 @@
+variable "environment" {
+  type        = string
+  description = "Deployment environment name (e.g. dev, staging, prod)"
+}
+
 variable "vpc_id" {
   description = "The target VPC ID where the ALB target group will be registered"
   type = string

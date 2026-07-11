@@ -1,7 +1,7 @@
 {
   "version": 4,
   "terraform_version": "1.15.5",
-  "serial": 4,
+  "serial": 3,
   "lineage": "a1504b1d-9a21-6368-3d6b-f8ec1a877a37",
   "outputs": {
     "backend_api_gateway_url": {
@@ -14,6 +14,42 @@
     }
   },
   "resources": [
+    {
+      "module": "module.database",
+      "mode": "managed",
+      "type": "aws_db_subnet_group",
+      "name": "main",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "arn": "arn:aws:rds:eu-west-1:224039895487:subgrp:fintech-db-subnet-group-dev",
+            "description": "Managed by Terraform",
+            "id": "fintech-db-subnet-group-dev",
+            "name": "fintech-db-subnet-group-dev",
+            "name_prefix": "",
+            "subnet_ids": [
+              "subnet-0201b9b114dddaa48",
+              "subnet-08edc3c2228cc8d09"
+            ],
+            "supported_network_types": [
+              "IPV4"
+            ],
+            "tags": {
+              "Name": "fintech-db-subnet-group-dev"
+            },
+            "tags_all": {
+              "Name": "fintech-db-subnet-group-dev"
+            },
+            "vpc_id": "vpc-0eaa23c32055be2d9"
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "eyJzY2hlbWFfdmVyc2lvbiI6IjAifQ=="
+        }
+      ]
+    },
     {
       "module": "module.frontend",
       "mode": "managed",

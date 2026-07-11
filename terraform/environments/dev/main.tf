@@ -42,6 +42,7 @@ module "database" {
 # 4. Compute Ingress Routing and Elastic Load Balancer 
 module "compute" {
   source            = "../../modules/compute"
+  environment       = "dev"
   vpc_id            = module.network.vpc_id
   public_subnet_ids = module.network.public_subnet_ids # Correctly reads from network outputs
   alb_sg_id         = module.security.alb_sg_id
