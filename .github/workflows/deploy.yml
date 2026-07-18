@@ -37,28 +37,21 @@ jobs:
         with:
           terraform_version: 1.5.0
 
-      # NEW SAFETY EXTRACTION: Validates architecture logic compilation upfront
       - name: Terraform Guardrail Validations
         run: |
           cd terraform/environments/dev
           terraform init
           terraform validate
 
-      - name: Terraform Deploy Infrastructure
-        id: terraform
-        run: |
-          cd terraform/environments/dev
-          terraform apply -auto-approve \
-            -var="db_password=${{ secrets.DB_PASSWORD }}" \
-            -var="docker_username=${{ secrets.DOCKERHUB_USERNAME }}"
-
+      # Renamed step ID to 'tf_outputs' to eliminate the double-outputs syntax bug
       - name: Extract Deployment Target URLs
-        id: outputs
+        id: tf_outputs
         run: |
           cd terraform/environments/dev
           echo "ALB_URL=$(terraform output -raw backend_api_gateway_url)" >> $GITHUB_OUTPUT
           echo "S3_BUCKET=$(terraform output -raw live_web_ui_url | sed 's/http:\/\///' | cut -d'.' -f1)" >> $GITHUB_OUTPUT
 
+      # Combined Microservices Build Phase
       - name: Build & Publish Microservices
         run: |
           cd services/transaction-service
@@ -73,14 +66,21 @@ jobs:
           docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/wallet-service:v1 .
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/wallet-service:v1
 
+      # Upgraded Frontend Compiler with Robust Self-Diagnostics
       - name: Compile Web Dashboard UI
         env:
-          REACT_APP_API_URL: ${{ steps.outputs.outputs.ALB_URL }}
+          REACT_APP_API_URL: ${{ steps.tf_outputs.outputs.ALB_URL }}
+        working-directory: frontend/react-app
         run: |
-          cd frontend/react-app
+          echo "Current deployment workspace: $(pwd)"
+          if [ ! -f package.json ]; then
+            echo "::error::package.json was not found inside frontend/react-app!"
+            exit 1
+          fi
           npm install
           npm run build
 
+      # Clean Sync Sequence targeting the corrected S3 variable map
       - name: Sync UI Assets to AWS S3 Static Bucket
         run: |
-          aws s3 sync frontend/react-app/build/ s3://${{ steps.outputs.outputs.S3_BUCKET }} --delete
+          aws s3 sync frontend/react-app/build/ s3://${{ steps.tf_outputs.outputs.S3_BUCKET }} --delete
