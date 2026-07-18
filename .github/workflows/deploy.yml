@@ -43,6 +43,13 @@ jobs:
           terraform init
           terraform validate
 
+      - name: Terraform Deploy Infrastructure
+        run: |
+          cd terraform/environments/dev
+          terraform apply -auto-approve \
+            -var="db_password=${{ secrets.DB_PASSWORD }}" \
+            -var="docker_username=${{ secrets.DOCKERHUB_USERNAME }}"
+
       - name: Extract Deployment Target URLs
         id: tf_outputs
         run: |
