@@ -19,7 +19,7 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
+          aws-region: eu-west-1
 
       - name: Log in to DockerHub
         uses: docker/login-action@v3
@@ -43,13 +43,27 @@ jobs:
           terraform init
           terraform validate
 
-      # Renamed step ID to 'tf_outputs' to eliminate the double-outputs syntax bug
       - name: Extract Deployment Target URLs
         id: tf_outputs
         run: |
+          set -euo pipefail
           cd terraform/environments/dev
-          echo "ALB_URL=$(terraform output -raw backend_api_gateway_url)" >> $GITHUB_OUTPUT
-          echo "S3_BUCKET=$(terraform output -raw live_web_ui_url | sed 's/http:\/\///' | cut -d'.' -f1)" >> $GITHUB_OUTPUT
+
+          ALB_URL=$(terraform output -raw backend_api_gateway_url)
+          if [ -z "$ALB_URL" ]; then
+            echo "::error::terraform output 'backend_api_gateway_url' is empty"
+            exit 1
+          fi
+
+          RAW_URL=$(terraform output -raw live_web_ui_url)
+          if [ -z "$RAW_URL" ]; then
+            echo "::error::terraform output 'live_web_ui_url' is empty"
+            exit 1
+          fi
+          S3_BUCKET=$(echo "$RAW_URL" | sed 's|https\?://||' | cut -d'.' -f1)
+
+          echo "ALB_URL=$ALB_URL" >> "$GITHUB_OUTPUT"
+          echo "S3_BUCKET=$S3_BUCKET" >> "$GITHUB_OUTPUT"
 
       # Combined Microservices Build Phase
       - name: Build & Publish Microservices
@@ -80,7 +94,6 @@ jobs:
           npm install
           npm run build
 
-      # Clean Sync Sequence targeting the corrected S3 variable map
       - name: Sync UI Assets to AWS S3 Static Bucket
         run: |
-          aws s3 sync frontend/react-app/build/ s3://${{ steps.tf_outputs.outputs.S3_BUCKET }} --delete
+          aws s3 sync frontend/react-app/build/ "s3://${{ steps.tf_outputs.outputs.S3_BUCKET }}" --delete
